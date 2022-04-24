@@ -1,0 +1,391 @@
+//created on: Apr 23, 2022
+package backwardVisionRules
+
+//list any import classes here.
+import model.AccionRecomendada;
+import model.ColorCristalino;
+import model.ColorEsclerotica;
+import model.Cornea;
+import model.Cristalino;
+import model.DiagnosticoCornea;
+import model.DiagnosticoCristalino;
+import model.DiagnosticoPreliminar;
+import model.DiagnosticoRetina;
+import model.Esclerotica;
+import model.EstadoCristalino;
+import model.EstadoEsclerotica;
+import model.EstadoIris;
+import model.EstadoPupila;
+import model.EstadoRetina;
+import model.FormaCornea;
+import model.GrosorCornea;
+import model.Iris;
+import model.LiquidoRetina;
+import model.ManchaEsclerotica;
+import model.Ojo;
+import model.Pupila;
+import model.Recomendacion;
+import model.ResultadoDiagnosticoCornea;
+import model.ResultadoDiagnosticoCristalino;
+import model.ResultadoDiagnosticoPreliminar;
+import model.ResultadoDiagnosticoRetina;
+import model.Retina;
+import model.RoturaRetina;
+
+
+rule "R01 - Tamaño Pupila contraida"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		pupila.tamanio <= 3,
+    		recomendacion.diagnosticoPreliminar.estadoPupila.isa(EstadoPupila.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoPupila(EstadoPupila.Contraida); 
+    	}
+end
+
+rule "R02 - Tamaño Pupila normal"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		pupila.tamanio <= 5,
+    		pupila.tamanio > 4,
+    		recomendacion.diagnosticoPreliminar.estadoPupila.isa(EstadoPupila.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoPupila(EstadoPupila.Normal); 
+    	}
+end
+
+rule "R03 - Tamaño Pupila dilatada"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		pupila.tamanio <= 6,
+    		pupila.tamanio > 5,
+    		recomendacion.diagnosticoPreliminar.estadoPupila.isa(EstadoPupila.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoPupila(EstadoPupila.Dilatada); 
+    	}
+end
+
+rule "R04 - Inflamacion Iris bueno"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		iris.inflamacion < 30,
+    		recomendacion.diagnosticoPreliminar.estadoIris.isa(EstadoIris.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoIris(EstadoIris.Bueno); 
+    	}
+end
+
+rule "R05 - Inflamacion Iris regular"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		iris.inflamacion > 30,
+    		iris.inflamacion < 70,
+    		recomendacion.diagnosticoPreliminar.estadoIris.isa(EstadoIris.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoIris(EstadoIris.Regular); 
+    	}
+end
+
+rule "R06 - Inflamacion Iris iritis"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		iris.inflamacion > 70,
+    		iris.inflamacion < 100,
+    		recomendacion.diagnosticoPreliminar.estadoIris.isa(EstadoIris.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoIris(EstadoIris.Iritis); 
+    	}
+end
+
+rule "R07 - Estado Cornea regular"
+lock-on-active agenda-group "Diagnostico Cornea"
+	when
+    	$ojo: Ojo(
+    		cornea.formaCornea.isa(FormaCornea.NoEspecificado),
+    		recomendacion.diagnosticoCornea.resultadoFinal.isa(ResultadoDiagnosticoCornea.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoCornea.setResultadoFinal(ResultadoDiagnosticoCornea.Regular); 
+    	}
+end
+
+rule "R08 - Estado Cornea normal"
+lock-on-active agenda-group "Diagnostico Cornea"
+	when
+    	$ojo: Ojo(
+    		cornea.formaCornea.isa(FormaCornea.Circular),
+    		recomendacion.diagnosticoCornea.resultadoFinal.isa(ResultadoDiagnosticoCornea.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoCornea.setResultadoFinal(ResultadoDiagnosticoCornea.Normal); 
+    	}
+end
+
+rule "R09 - Estado Cornea queratocono"
+lock-on-active agenda-group "Diagnostico Cornea"
+	when
+    	$ojo: Ojo(
+    		cornea.formaCornea.isa(FormaCornea.Conica),
+    		cornea.grosorCornea.isa(GrosorCornea.Fino),
+    		recomendacion.diagnosticoCornea.resultadoFinal.isa(ResultadoDiagnosticoCornea.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoCornea.setResultadoFinal(ResultadoDiagnosticoCornea.Queratocono); 
+    	}
+end
+
+rule "R10 - Estado Esclerotica normal"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		esclerotica.colorEsclerotica.isa(ColorEsclerotica.Blanco),
+    		recomendacion.diagnosticoPreliminar.estadoEsclerotica.isa(EstadoEsclerotica.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoEsclerotica(EstadoEsclerotica.Normal);
+    	}
+end
+
+rule "R11 - Estado Esclerotica grave"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		esclerotica.colorEsclerotica.isa(ColorEsclerotica.Azulado)
+    		recomendacion.diagnosticoPreliminar.estadoEsclerotica.isa(EstadoEsclerotica.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoEsclerotica(EstadoEsclerotica.Grave);
+    	}
+end
+
+rule "R12 - Estado Esclerotica hemorragia"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		esclerotica.manchaEsclerotica.isa(ManchaEsclerotica.Roja),
+    		recomendacion.diagnosticoPreliminar.estadoEsclerotica.isa(EstadoEsclerotica.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoEsclerotica(EstadoEsclerotica.Hemorragia);
+    	}
+end
+
+rule "R12 - Estado Esclerotica hemorragia"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		esclerotica.manchaEsclerotica.isa(ManchaEsclerotica.Roja),
+    		recomendacion.diagnosticoPreliminar.estadoEsclerotica.isa(EstadoEsclerotica.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.setEstadoEsclerotica(EstadoEsclerotica.Hemorragia);
+    	}
+end
+
+rule "R13 - Estado Cristalino normal"
+lock-on-active agenda-group "Diagnostico Cristalino"
+	when
+    	$ojo: Ojo(
+    		cristalino.colorCristalino.isa(ColorCristalino.Transparente),
+    		recomendacion.diagnosticoCristalino.estadoCristalino.isa(EstadoCristalino.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoCristalino.setEstadoCristalino(EstadoCristalino.Normal);
+    	}
+end
+
+rule "R14 - Estado Cristalino cataratas"
+lock-on-active agenda-group "Diagnostico Cristalino"
+	when
+    	$ojo: Ojo(
+    		cristalino.colorCristalino.isa(ColorCristalino.Opaco),
+    		recomendacion.diagnosticoCristalino.estadoCristalino.isa(EstadoCristalino.NoEspecificado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoCristalino.setEstadoCristalino(EstadoCristalino.Cataratas);
+    	}
+end
+
+rule "R15 - Estado Retina desprendida"
+lock-on-active agenda-group "Diagnostico Retina"
+	when
+    	$ojo: Ojo(
+    		retina.liquidoRetina.isa(LiquidoRetina.Si),
+    		recomendacion.diagnosticoRetina.estadoRetina.isa(EstadoRetina.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoRetina.setEstadoRetina(EstadoRetina.Desprendida);
+    	}
+end
+
+rule "R16 - Estado Retina desgarrada"
+lock-on-active agenda-group "Diagnostico Retina"
+	when
+    	$ojo: Ojo(
+    		retina.roturaRetina.isa(RoturaRetina.Si)
+    		recomendacion.diagnosticoRetina.estadoRetina.isa(EstadoRetina.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoRetina.setEstadoRetina(EstadoRetina.Desgarrada);
+    	}
+end
+
+rule "R17 - Estado Retina no determinado"
+lock-on-active agenda-group "Diagnostico Retina"
+	when
+    	$ojo: Ojo(
+    		retina.liquidoRetina.isa(LiquidoRetina.No),
+    		retina.roturaRetina.isa(RoturaRetina.No),
+    		recomendacion.diagnosticoRetina.estadoRetina.isa(EstadoRetina.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoRetina.setEstadoRetina(EstadoRetina.NoDeterminado);
+    	}
+end
+
+rule "R18 - Diagnostico preliminar esclerotica alterada"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoPreliminar.estadoEsclerotica.isa(EstadoEsclerotica.Grave),
+    		recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.EscleroticaAlterada); 
+    	}
+end
+
+rule "R19 - Diagnostico preliminar pupila contraida"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoPreliminar.estadoPupila.isa(EstadoPupila.Contraida),
+    		recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.PupilaContraida); 
+    	}
+end
+
+rule "R20 - Diagnostico preliminar pupila dilatada"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoPreliminar.estadoPupila.isa(EstadoPupila.Dilatada),
+    		recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.PupilaDilatada);
+    	}
+end
+
+rule "R21 - Diagnostico preliminar iris inflamado"
+lock-on-active agenda-group "Diagnostico Preliminar"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoPreliminar.estadoIris.isa(EstadoIris.Regular),
+    		recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.NoDeterminado)
+        )
+    then
+    	modify($ojo) {
+    	   recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar(ResultadoDiagnosticoPreliminar.IrisInflamada);
+    	}
+end
+
+rule "R22 - Recomendacion operacion con laser"
+lock-on-active agenda-group "Prescripcion de problema de vision"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoRetina.estadoRetina.isa(EstadoRetina.Desprendida),
+    		recomendacion.accion.isa(AccionRecomendada.NoEncontrada)
+        )
+    then
+    	modify($ojo) {
+    		recomendacion.setAccion(AccionRecomendada.OperacionConLaser);
+    	}
+end
+
+rule "R23 - Recomendacion intervencion quirurgica"
+lock-on-active agenda-group "Prescripcion de problema de vision"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoCristalino.estadoCristalino.isa(EstadoCristalino.Cataratas),
+    		recomendacion.accion.isa(AccionRecomendada.NoEncontrada)
+        )
+    then
+    	modify($ojo) {
+    		recomendacion.setAccion(AccionRecomendada.IntervencionQuirurgica);
+    	}
+end
+
+rule "R24 - Recomendacion usar gotas para los ojos"
+lock-on-active agenda-group "Prescripcion de problema de vision"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar.isa(ResultadoDiagnosticoPreliminar.PupilaContraida),
+    		recomendacion.accion.isa(AccionRecomendada.NoEncontrada)
+        )
+    then
+    	modify($ojo) {
+    		recomendacion.setAccion(AccionRecomendada.UsarGotaParaLosOjos);
+    	}
+end
+
+rule "R25 - Recomendacion usar lentes"
+lock-on-active agenda-group "Prescripcion de problema de vision"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoCornea.resultadoFinal.isa(ResultadoDiagnosticoCornea.Regular),
+    		recomendacion.accion.isa(AccionRecomendada.NoEncontrada)
+        )
+    then
+    	modify($ojo) {
+    		recomendacion.setAccion(AccionRecomendada.UsarLentes);
+    	}
+end
+
+rule "R26 - Recomendacion uso de farmacos"
+lock-on-active agenda-group "Prescripcion de problema de vision"
+	when
+    	$ojo: Ojo(
+    		recomendacion.diagnosticoPreliminar.resultadoDiagnosticoPreliminar.isa(ResultadoDiagnosticoPreliminar.EscleroticaAlterada),
+    		recomendacion.accion.isa(AccionRecomendada.NoEncontrada)
+        )
+    then
+    	modify($ojo) {
+    		recomendacion.setAccion(AccionRecomendada.UsoDeFarmacos);
+    	}
+end
